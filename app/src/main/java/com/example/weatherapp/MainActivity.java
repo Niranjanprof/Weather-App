@@ -1,9 +1,11 @@
 package com.example.weatherapp;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -11,6 +13,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.bumptech.glide.Glide;
+import com.google.android.material.snackbar.BaseTransientBottomBar;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 
 import org.json.JSONArray;
@@ -23,6 +27,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
@@ -64,6 +69,8 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                InputMethodManager mgr = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                mgr.hideSoftInputFromWindow(editText.getWindowToken(),0);
                 parent.setAlpha(0);
                 resultCurrTemp.setText("");
                 resultMinTemp.setText("");
@@ -76,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
                     String formatted = "";
                     try {
                         formatted = input.substring(0, 1).toUpperCase() + input.substring(1);
+                        formatted = URLEncoder.encode(formatted,"UTF-8");
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -85,6 +93,7 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         jsonLoader.execute("https://api.openweathermap.org/data/2.5/weather?q=" + formatted + "&APPID=f178f2a2aac6f85f1241053f90a2d4f8");
                     } catch (Exception e) {
+                        errorSnack();
                         e.printStackTrace();
                     }
                 }
@@ -116,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
                 return result.toString();
             } catch (Exception e) {
                 e.printStackTrace();
+                errorSnack();
             }
             return null;
         }
@@ -176,10 +186,21 @@ public class MainActivity extends AppCompatActivity {
                 }
 
             } catch (Exception e) {
+                errorSnack();
                 e.printStackTrace();
             }
-
-
         }
     }
+
+    private void errorSnack() {
+        final Snackbar snackbar = Snackbar.make(parent,"We were unable to process that request", BaseTransientBottomBar.LENGTH_LONG);
+        snackbar.setAction("CLOSE", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                snackbar.dismiss();
+            }
+        });
+        snackbar.show();
+    }
+
 }
